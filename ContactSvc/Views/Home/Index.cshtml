@@ -1,0 +1,364 @@
+﻿  
+<div id="body">
+  <table style="border:groove">
+<tr>
+<td style="text-align:center;">
+    <div id="listdiv" style="display:none;">
+     <table><tr><td>
+    <ul id="contacts"><table id ="contactstable"><tr><td>First Name</td><td>Last Name</td><td>Phone</td><td>Email</td><td>Status</td><td></td><td></td></tr></table></ul>
+         </td></tr>
+        <tr><td>
+		
+        <input type="button" id="addContact" value="Add" /></td></tr></table>
+    </div>
+        
+</td>
+</tr>
+
+<tr>
+<td>
+
+<div id="creatediv" style="display:none;margin-left: 60px;">
+    <table>
+        <tr><td style="text-align:center">
+<form id="saveContactForm" method="post">
+
+<h3 id="heading">Create a new Contact</h3>
+<h3 id="mheading" style="display:none">Modify Contact</h3>
+    </td></tr>
+        <tr><td style="width:248px;float: left">
+    <label for="contactId" style="display:none">Contact Id:</label>
+    <input type="text" id="contactid" name="Id" style="display:none;width:auto" value=1 />
+      
+    <label for="FirstName">First Name:</label>
+    <input type="text" id="fnameitem" name="FName" style="width:auto" />
+    <div id="fname_error" style="display:none;background-color:red;color:white;">First name cannot be empty</div>
+
+    <label for="LastName">Last Name:</label>
+    <input type="text" id= "lnameitem" name="LName" style="width:auto"/>
+     <div id="lname_error" style="display:none;background-color:red;color:white;">Last name cannot be empty</div>
+
+    <label for="Email">Email:</label>
+    <input type="text" id="emailitem" name="Email" style="width:auto"/>
+    <div id="email_error" style="display:none;background-color:red;color:white;">Invalid Email id</div>
+
+    <label for="Phone">Phone:</label>
+    <input type="text" id="phoneitem" name="Phone" style="width:auto"/>
+     <div id="phone_error" style="display:none;background-color:red;color:white;">Phone number should be between 1 to 10 digits</div>
+    <label for="Status">Status:</label>
+    <select id="statusitem" class="select" name="Status" style="width:auto">
+                <option value=0>Inactive</option>
+                <option value=1>Active</option>
+              </select>
+            </td>
+            </tr>
+        <tr><td style="text-align:center">
+    <br/>    
+    <input type="button" id="saveContact" value="Save" />
+    <input type="button" id="modifyContact" style="display:none" value="Modify" />
+    <input type="button" id="cancelContact" value="Cancel" />
+     <input type="text" id="operationid" name="Eops" style="display:none" value=0 />
+    <div id="validation-errors" style="display:none;background-color:red;color:white;">The form is not yet complete. Check through the form for error messages</div>
+   </td></tr>
+        </table>
+</form>
+</div>
+               </td>
+	</tr>
+	</table>
+</div>
+@section scripts{
+
+<script type="text/javascript">
+
+    function UIManager()
+    {
+
+        var bshowlist  = false;
+        //table
+        var obj = $("#contactstable").html().length;
+        //tbody
+        //Minimum length record is 542
+        if (obj >500)
+        {
+            bshowlist = true;
+        }
+        //if(bshowlist) = obj[0].childNodes[0] != null ? true : false;
+        var divlist = $("#listdiv");
+        var divcreate = $("#creatediv");
+        showCreateForm(true);
+        if (bshowlist) {
+            divcreate.hide();
+            divlist.show();
+        }
+        else {
+           
+            divcreate.show();
+            divlist.hide();
+
+        }
+    }
+    $('#addContact').click(function () {
+        showCreateForm(true);
+        var divcreate = $("#creatediv");
+        divcreate.show();
+        var divlist = $("#listdiv");
+        divlist.hide();
+        
+    });
+    function showCreateForm(bval) {
+        if (bval) {
+            $("#mheading").hide();
+            $("#heading").show();
+            $("#modifyContact").hide();
+            $("#saveContact").show();
+            $('#contactid').val(1);
+            $('#fnameitem').val("");
+            $('#lnameitem').val("");
+            $('#phoneitem').val("");
+            $('#emailitem').val("");
+            //if (Status == 0)
+            $('#statusitem').val(0);
+            $('#operationid').val(0);
+        }
+        else {
+            $("#mheading").show();
+            $("#heading").hide();
+            $("#modifyContact").show();
+            $("#saveContact").hide();
+            $('#operationid').val(1);
+        }
+    }
+    function WriteModifyForm(Id,FName,LName,Phone,Email,Status) {
+
+        //$('#heading').html = "Modify Contact";
+        $('#contactid').val(Id);
+        $('#fnameitem').val(FName);
+        $('#lnameitem').val(LName);
+        $('#phoneitem').val(Phone);
+        $('#emailitem').val(Email);
+        $('#statusitem').val(Status);        
+        ToggleModify();
+
+    }
+   
+    $(function () {        
+        $.getJSON('/api/contact', function (contactsJsonPayload) {
+
+            $(contactsJsonPayload).each(function (i, item) {
+
+                var varstatus = (item.Status == 1 ? "Active" : "Inactive");
+                $('#contactstable').append('<tr id="row_' + item.Id + '"><td id="cell_fname' + item.Id + '">' + item.FName + '</td><td id="cell_lname' + item.Id + '">' + item.LName + '</td><td id="cell_phone' + item.Id + '">' + item.Phone + '</td><td id="cell_email' + item.Id + '">' + item.Email + '</td><td id="cell_status' + item.Id + '">' + varstatus + '</td><td><a id="xitemmodify" href="javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');" ><img id ="contact' + item.Id + '_a" src="images/modify.png" /></a></td><td><a id="xitemdelete" href="javascript:Delete(' + item.Id + ');" ><img id ="contact' + item.Id + '_b" src="images/delete.png" /></a></td><tr>');
+                
+            });
+            UIManager();
+        });
+        
+
+    });
+
+    function ToggleModify() {
+        //WriteModifyFormInactive(item);
+        showCreateForm(false);
+        var divmodify = $("#creatediv");
+        var divlist = $("#listdiv");
+        if (divlist.is(":visible")) {
+            divlist.hide();            
+            divmodify.show();            
+        }
+        else {
+            divmodify.hide();            
+            divlist.show();  
+            
+        }
+
+    }
+    function Delete(Id) {
+        //WriteModifyFormInactive(item);
+        $('#contactid').val(Id);
+        $('#fnameitem').val("");
+        $('#lnameitem').val("");
+        $('#phoneitem').val("");
+        $('#emailitem').val("");
+        $('#statusitem').val(0);
+        $('#operationid').val(2);
+
+        $.post("api/contact",
+               $("#saveContactForm").serialize(),
+               function (value) {
+                   //$('#contacts').append('<li>' + value.FName + '</li>');
+                   var item = value;
+                   $("#row_" + item.Id).remove();
+                   UIManager();
+               },
+               "json"
+         );
+        
+    }
+$('#cancelContact').click(function (){ UIManager();});
+$('#saveContact').click(function()
+{
+    if (validate('')) {
+        $.post("api/contact",
+              $("#saveContactForm").serialize(),
+              function (value) {
+                  //$('#contacts').append('<li>' + value.FName + '</li>');
+                  var item = value;
+                  var varstatus = item.Status == 1 ? "Active" : "Inactive";
+                  $('#contactstable').append('<tr id="row_' + item.Id + '"><td id="cell_fname' + item.Id + '">' + item.FName + '</td><td id="cell_lname' + item.Id + '">' + item.LName + '</td><td id="cell_phone' + item.Id + '">' + item.Phone + '</td><td id="cell_email' + item.Id + '">' + item.Email + '</td><td id="cell_status' + item.Id + '">' + varstatus + '</td><td><a id="xitemmodify" href="javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');" ><img id ="contact' + item.Id + '_a" src="images/modify.png" /></a></td><td><a id="xitemdelete" href="javascript:Delete(' + item.Id + ');" ><img id ="contact' + item.Id + '_b" src="images/delete.png" /></a></td><tr>');
+                  UIManager();
+              },
+              "json"
+        );
+        
+    }
+    
+});
+//$("#modifydiv").on('click', '#modifyContact', function () {
+$('#modifyContact').click(function () {
+    if (validate('')) {
+        $.post("api/contact",
+              $("#saveContactForm").serialize(),              
+              function (value) {
+                  //$('#contacts').append('<li>' + value.FName + '</li>');
+                  var item = value;
+                  var varstatus = item.Status == 1 ? "Active" : "Inactive";
+                  var cell_fname = $("#cell_fname" + item.Id);
+                  cell_fname.html(item.Fname);
+                  var cell_lname = $("#cell_lname" + item.Id);
+                  cell_lname.html(item.Lname);
+                  var cell_phone = $("#cell_phone" + item.Id);
+                  cell_phone.html(item.Phone);
+                  var cell_email = $("#cell_email" + item.Id);
+                  cell_email.html(item.Email);
+                  var cell_status = $("#cell_status" + item.Id);
+                  item.Status == 0 ? cell_status.html("Inactive") : cell_status.html("Active");
+                  UIManager();
+              },
+              "json"
+        );
+    }
+    //UIManager();
+});
+
+    //Vaidation
+
+function validate(form) {
+    var ret=true;
+    var ok = validateemail(form);
+    ret &= ok;
+    showError(form+'email_error', ok);
+    ret &= ok;
+    ok = validatetxt(form + 'fnameitem');
+    ret &= ok;
+    showError(form + 'fname_error', ok);
+    ret &= ok;
+    ok = validatetxt(form + 'lnameitem');
+    ret &= ok;
+    showError(form + 'lname_error', ok);
+    ok = validatephone(form);
+    ret &= ok;
+    showError(form + 'phone_error', ok);
+    if (!ret) {
+        $('#'+form+'validation-errors').show();
+    }
+    else {
+        $('#' + form + 'validation-errors').hide();
+    }
+    return ret;
+}
+
+function showError(id, ok) {
+    var error = $("#" + id);
+    if (ok)
+        error.hide();
+    else
+        error.show();
+}
+function matchesPattern(elem, regex) {
+    return regex.test(elem.val());
+}
+var validateemail = function (form) {
+    var ok = true;
+    var v = $('#' + form + 'emailitem');
+    //var pathDiv = $('#item-path-5-instance-1_1');
+    // mandatory test
+    if ((v.val() == null) || (v.val().length==0))
+        ok=false;
+    var patternMatched =false;
+    patternMatched |= matchesPattern(v,/^^([0-9a-zA-Z_\.\'\-]+)*@@[0-9a-zA-Z\-]+[a-zA-Z\.]+$$/);
+    if (!(patternMatched))
+        ok = false;  
+    return ok;
+}
+var validatetxt = function (id) {
+    var ok = true;
+    var v = $('#'+id);   
+    // mandatory test
+    if ((v.val() == null) || (v.val().length == 0))
+        ok = false;
+    var patternMatched = false;
+    patternMatched |= matchesPattern(v, /^.*[^\s].*$/);
+    if (!(patternMatched))
+        ok = false;  
+    return ok;
+}
+var validatephone = function (form) {
+    var ok = true;
+    var v = $('#'+form+'phoneitem');
+    ok &= matchesPattern(v, /^\d+$/);
+    //facet test
+    if ((+(v.val())) < 1)
+        ok = false;
+    //facet test
+    if ((+(v.val())) > 9999999999)
+        ok = false;
+    return ok;
+}
+$('#emailitem').change(function () {
+    var ok = validateemail('');
+    showError('email_error', ok);
+    //validate();
+});
+
+$('#fnameitem').change(function () {
+    var ok = validatetxt('fnameitem');
+    showError('fname_error', ok);
+    //validate();
+});
+$('#lnameitem').change(function () {
+    var ok = validatetxt('lnameitem');
+    showError('lname_error', ok);
+    //validate();
+});
+
+$('#phoneitem').change(function () {
+    var ok = validatephone('');
+    showError('phone_error', ok);
+    //validate();
+});
+$('#memailitem').change(function () {
+    var ok = validateemail('m');
+    showError('email_error', ok);
+    //validate();
+});
+
+$('#mfnameitem').change(function () {
+    var ok = validatetxt('mfnameitem');
+    showError('fname_error', ok);
+    //validate();
+});
+$('#mlnameitem').change(function () {
+    var ok = validatetxt('mlnameitem');
+    showError('lname_error', ok);
+    //validate();
+});
+
+$('#mphoneitem').change(function () {
+    var ok = validatephone('m');
+    showError('phone_error', ok);
+    //validate();
+});
+</script>
+
+}
