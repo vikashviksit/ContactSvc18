@@ -18,25 +18,7 @@ namespace ContactSvc.Controllers
         }
         public Contact[] Get()
         {
-            //define a class dervied from Svc interface whose method would provide the service
-            /*return new Contact[]
-             {
-                new Contact
-                {
-                    Id = "1",
-                    Name = "Glenn Block"
-                },
-                new Contact
-                {
-                    Id = "2",
-                    Name = "Dan Roth"
-                }
-
-            };
-             * */
-
-             
-             return contactsvcrepo.GetContact();
+            return contactsvcrepo.GetContact();
         }
         public HttpResponseMessage Post(Contact contact)
         {

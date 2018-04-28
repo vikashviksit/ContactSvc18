@@ -28,15 +28,15 @@
     </td></tr>
         <tr><td style="width:248px;float: left">
     <label for="contactId" style="display:none">Contact Id:</label>
-    <input type="text" id="contactid" name="Id" style="display:none;width:auto" value=1 />
+    <input type="text" id="contactid" name="Id" style="display:none;width:auto" value=0 />
       
     <label for="FirstName">First Name:</label>
     <input type="text" id="fnameitem" name="FName" style="width:auto" />
-    <div id="fname_error" style="display:none;background-color:red;color:white;">First name cannot be empty</div>
+    <div id="fname_error" style="display:none;background-color:red;color:white;">First name should be between 1 to 50 characters</div>
 
     <label for="LastName">Last Name:</label>
     <input type="text" id= "lnameitem" name="LName" style="width:auto"/>
-     <div id="lname_error" style="display:none;background-color:red;color:white;">Last name cannot be empty</div>
+    <div id="lname_error" style="display:none;background-color:red;color:white;">Last name should be between 1 to 50 characters</div>
 
     <label for="Email">Email:</label>
     <input type="text" id="emailitem" name="Email" style="width:auto"/>
@@ -112,7 +112,7 @@
             $("#heading").show();
             $("#modifyContact").hide();
             $("#saveContact").show();
-            $('#contactid').val(1);
+            $('#contactid').val(0);
             $('#fnameitem').val("");
             $('#lnameitem').val("");
             $('#phoneitem').val("");
@@ -120,6 +120,7 @@
             //if (Status == 0)
             $('#statusitem').val(0);
             $('#operationid').val(0);
+
         }
         else {
             $("#mheading").show();
@@ -148,7 +149,7 @@
             $(contactsJsonPayload).each(function (i, item) {
 
                 var varstatus = (item.Status == 1 ? "Active" : "Inactive");
-                $('#contactstable').append('<tr id="row_' + item.Id + '"><td id="cell_fname' + item.Id + '">' + item.FName + '</td><td id="cell_lname' + item.Id + '">' + item.LName + '</td><td id="cell_phone' + item.Id + '">' + item.Phone + '</td><td id="cell_email' + item.Id + '">' + item.Email + '</td><td id="cell_status' + item.Id + '">' + varstatus + '</td><td><a id="xitemmodify" href="javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');" ><img id ="contact' + item.Id + '_a" src="images/modify.png" /></a></td><td><a id="xitemdelete" href="javascript:Delete(' + item.Id + ');" ><img id ="contact' + item.Id + '_b" src="images/delete.png" /></a></td><tr>');
+                $('#contactstable').append('<tr id="row_' + item.Id + '"><td id="cell_fname' + item.Id + '">' + item.FName + '</td><td id="cell_lname' + item.Id + '">' + item.LName + '</td><td id="cell_phone' + item.Id + '">' + item.Phone + '</td><td id="cell_email' + item.Id + '">' + item.Email + '</td><td id="cell_status' + item.Id + '">' + varstatus + '</td><td><a id="xitemmodify' + item.Id + '" href="javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');" ><img id ="contact' + item.Id + '_a" src="images/modify.png" /></a></td><td><a id="xitemdelete' + item.Id +'" href="javascript:Delete(' + item.Id + ');" ><img id ="contact' + item.Id + '_b" src="images/delete.png" /></a></td><tr>');
                 
             });
             UIManager();
@@ -195,7 +196,14 @@
          );
         
     }
-$('#cancelContact').click(function (){ UIManager();});
+    $('#cancelContact').click(function () {
+        var ok = true;
+        showError('email_error', ok);
+        showError('fname_error', ok);
+        showError('phone_error', ok);
+        showError('lname_error', ok);
+        UIManager();
+    });
 $('#saveContact').click(function()
 {
     if (validate('')) {
@@ -205,7 +213,7 @@ $('#saveContact').click(function()
                   //$('#contacts').append('<li>' + value.FName + '</li>');
                   var item = value;
                   var varstatus = item.Status == 1 ? "Active" : "Inactive";
-                  $('#contactstable').append('<tr id="row_' + item.Id + '"><td id="cell_fname' + item.Id + '">' + item.FName + '</td><td id="cell_lname' + item.Id + '">' + item.LName + '</td><td id="cell_phone' + item.Id + '">' + item.Phone + '</td><td id="cell_email' + item.Id + '">' + item.Email + '</td><td id="cell_status' + item.Id + '">' + varstatus + '</td><td><a id="xitemmodify" href="javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');" ><img id ="contact' + item.Id + '_a" src="images/modify.png" /></a></td><td><a id="xitemdelete" href="javascript:Delete(' + item.Id + ');" ><img id ="contact' + item.Id + '_b" src="images/delete.png" /></a></td><tr>');
+                  $('#contactstable').append('<tr id="row_' + item.Id + '"><td id="cell_fname' + item.Id + '">' + item.FName + '</td><td id="cell_lname' + item.Id + '">' + item.LName + '</td><td id="cell_phone' + item.Id + '">' + item.Phone + '</td><td id="cell_email' + item.Id + '">' + item.Email + '</td><td id="cell_status' + item.Id + '">' + varstatus + '</td><td><a id="xitemmodify' + item.Id + '" href="javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');" ><img id ="contact' + item.Id + '_a" src="images/modify.png" /></a></td><td><a id="xitemdelete' + item.Id + '" href="javascript:Delete(' + item.Id + ');" ><img id ="contact' + item.Id + '_b" src="images/delete.png" /></a></td><tr>');
                   UIManager();
               },
               "json"
@@ -222,17 +230,21 @@ $('#modifyContact').click(function () {
               function (value) {
                   //$('#contacts').append('<li>' + value.FName + '</li>');
                   var item = value;
-                  var varstatus = item.Status == 1 ? "Active" : "Inactive";
+                  //var varstatus = item.Status == 1 ? "Active" : "Inactive";
                   var cell_fname = $("#cell_fname" + item.Id);
-                  cell_fname.html(item.Fname);
+                  cell_fname.html(item.FName);
                   var cell_lname = $("#cell_lname" + item.Id);
-                  cell_lname.html(item.Lname);
+                  cell_lname.html(item.LName);
                   var cell_phone = $("#cell_phone" + item.Id);
                   cell_phone.html(item.Phone);
                   var cell_email = $("#cell_email" + item.Id);
                   cell_email.html(item.Email);
                   var cell_status = $("#cell_status" + item.Id);
                   item.Status == 0 ? cell_status.html("Inactive") : cell_status.html("Active");
+                  var cell_href_modify = $("#xitemmodify" + item.Id);
+                  cell_href_modify.attr('href','javascript:WriteModifyForm(\'' + item.Id + '\',\'' + item.FName + '\',\'' + item.LName + '\',\'' + item.Phone + '\',\'' + item.Email + '\',' + item.Status + ');');
+                  var cell_href_delete = $("#xitemdelete" + item.Id);
+                  cell_href_delete.attr('href','javascript:Delete(' + item.Id + ');');
                   UIManager();
               },
               "json"
@@ -283,7 +295,7 @@ var validateemail = function (form) {
     var v = $('#' + form + 'emailitem');
     //var pathDiv = $('#item-path-5-instance-1_1');
     // mandatory test
-    if ((v.val() == null) || (v.val().length==0))
+    if ((v.val() == null) || (v.val().length == 0) || (v.val().length > 50))
         ok=false;
     var patternMatched =false;
     patternMatched |= matchesPattern(v,/^^([0-9a-zA-Z_\.\'\-]+)*@@[0-9a-zA-Z\-]+[a-zA-Z\.]+$$/);
@@ -295,7 +307,7 @@ var validatetxt = function (id) {
     var ok = true;
     var v = $('#'+id);   
     // mandatory test
-    if ((v.val() == null) || (v.val().length == 0))
+    if ((v.val() == null) || (v.val().length == 0) || (v.val().length > 50))
         ok = false;
     var patternMatched = false;
     patternMatched |= matchesPattern(v, /^.*[^\s].*$/);
@@ -334,28 +346,6 @@ $('#lnameitem').change(function () {
 
 $('#phoneitem').change(function () {
     var ok = validatephone('');
-    showError('phone_error', ok);
-    //validate();
-});
-$('#memailitem').change(function () {
-    var ok = validateemail('m');
-    showError('email_error', ok);
-    //validate();
-});
-
-$('#mfnameitem').change(function () {
-    var ok = validatetxt('mfnameitem');
-    showError('fname_error', ok);
-    //validate();
-});
-$('#mlnameitem').change(function () {
-    var ok = validatetxt('mlnameitem');
-    showError('lname_error', ok);
-    //validate();
-});
-
-$('#mphoneitem').change(function () {
-    var ok = validatephone('m');
     showError('phone_error', ok);
     //validate();
 });

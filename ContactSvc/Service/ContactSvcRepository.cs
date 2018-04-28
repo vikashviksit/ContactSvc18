@@ -8,50 +8,61 @@ namespace ContactSvc.Service
     public class ContactSvcRepository
     {
         private const string CacheKey = "ContactStore";
-        /*public ContactSvcRepository()
+        private const string DataMgrKey = "DataManager";
+        private const string DbMgrKey = "DBManager";
+        private IDataManager m_cdatamgr;
+        private IDBManager m_cdbmgr;
+        public ContactSvcRepository()
         {
-            var ctx = HttpContext.Current;
-            if (ctx != null)
-            {
-                return (Contact[])ctx.Cache[CacheKey];
-            }
+
+            SetCache();
             
         }
-         * */
+        public void SetCache()
+        {
+            var ctx = HttpContext.Current;
+            string connstring = "Data Source=contactsvc18db.database.windows.net;Initial Catalog=ContactSvc18_db;Integrated Security=False;User ID=vikashviksit;Password=Gyanvi17;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            //string connstringlocal = "Data Source = (localdb)\v11.0; Initial Catalog = AzureStorageEmulatorDb40; Integrated Security = True; Connect Timeout = 30; Encrypt = False; TrustServerCertificate = False; ApplicationIntent = ReadWrite; MultiSubnetFailover = False";
+            if (ctx != null)
+            {
+                if (ctx.Cache[DataMgrKey] == null)
+                {
+                    ctx.Cache[DataMgrKey] = new ContactDataManager(CacheKey);
+                }
+                if (ctx.Cache[DbMgrKey] == null)
+                {
+                    ctx.Cache[DbMgrKey] = new ContactDBManager(connstring); //TBD set connection string;
+                }
+                m_cdatamgr = (IDataManager)ctx.Cache[DataMgrKey];
+                m_cdbmgr = (IDBManager)ctx.Cache[DbMgrKey];
+                
+
+            }
+            else
+            {
+                m_cdatamgr = new ContactDataManager(CacheKey);
+                m_cdbmgr = new ContactDBManager(connstring); ;                
+
+            }
+           
+        }
 
         public Contact[] GetContact()
         {
-            /*return new Contact[]
-             {
-                new Contact
-                {
-                    Id = 1,
-                    FName = "Monika",
-                    LName = "Singh",
-                    Phone = "4444",
-                    Email = "aaa@aa",
-                    Status = estatus.online,
-
-                },
-                new Contact
-                {
-                   Id = 2,
-                    FName = "Vikash",
-                    LName = "Singh",
-                    Phone = "3434",
-                    Email = "aaa@bb",
-                    Status = estatus.online,
-                }
-             * 
-
-            };*/
-            var ctx = HttpContext.Current;
-
-            if (ctx != null)
+            try
             {
-                return (Contact[])ctx.Cache[CacheKey];
+                var ctx = HttpContext.Current;
+                SetCache();
+                Contact[] contacts = m_cdatamgr.Get(ref ctx, ref m_cdbmgr);
+                if (contacts != null)
+                {
+                    return contacts;
+                }
             }
-
+            catch (Exception ex)
+            {
+                Console.WriteLine(m_cdbmgr.GetException(ref ex));               
+            }
             return new Contact[]
             {
                 new Contact
@@ -69,130 +80,59 @@ namespace ContactSvc.Service
         }
         public bool SaveContact(Contact contact)
         {
-            var ctx = HttpContext.Current;
-
-            if (ctx != null)
-            {
+                bool bret = false;
                 try
                 {
-                    if (ctx.Cache[CacheKey] != null)
-                    {
-                        var currentData = ((Contact[])ctx.Cache[CacheKey]).ToList();
-                        int newId = 1;
-                        if (currentData.Count > 0)
-                        {
-                            Contact[] contactarray = (Contact[])ctx.Cache[CacheKey];
-                            newId = contactarray[currentData.Count - 1].Id + 1;
-                        }
-                        contact.Id = newId;
-                        currentData.Add(contact);
+                    var ctx = HttpContext.Current;
+                    SetCache();
+                    m_cdatamgr.Add(ref ctx, ref m_cdbmgr,ref contact);
+                    bret = true;
 
-                        ctx.Cache[CacheKey] = currentData.ToArray();
-                    }
-                    else
-                    {
-                        ctx.Cache[CacheKey] = new Contact[] { contact };
-                    }
 
-                    return true;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
-                    return false;
+                        Console.WriteLine(m_cdbmgr.GetException(ref ex));
+                        bret = false;
                 }
-            }
-
-            return false;
+                return bret;
 
         }
         public bool UpdateContact(Contact contact)
         {
-            var ctx = HttpContext.Current;
 
-            if (ctx != null)
+            bool bret = false;
+            try
             {
-                try
-                {
-                    if (ctx.Cache[CacheKey] != null)
-                    {
-                        var currentData = ((Contact[])ctx.Cache[CacheKey]).ToList();
-                        Contact[] contactarray = (Contact[])ctx.Cache[CacheKey];
-                        for (int i = 0; i < currentData.Count; ++i)
-                        {
-                            if (contactarray[i].Id == contact.Id)
-                            {
-                                if (contactarray[i].FName != contact.FName)
-                                {
-                                    contactarray[i].FName = contact.FName;
-                                }
-                                if (contactarray[i].LName != contact.LName)
-                                {
-                                    contactarray[i].LName = contact.LName;
-                                }
-                                if (contactarray[i].Phone != contact.Phone)
-                                {
-                                    contactarray[i].Phone = contact.Phone;
-                                }
-                                if (contactarray[i].Email != contact.Email)
-                                {
-                                    contactarray[i].Email = contact.Email;
-                                }
-                                if (contactarray[i].Status != contact.Status)
-                                {
-                                    contactarray[i].Status = contact.Status;
-                                }
-                                break;
-                            }
+                var ctx = HttpContext.Current;
+                SetCache();
+                m_cdatamgr.Update(ref ctx, ref m_cdbmgr, ref contact);
 
-                        }
-                        ctx.Cache[CacheKey] = currentData.ToArray();
-                        return true;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    return false;
-                }
             }
-            return false;
+            catch (Exception ex)
+            {
+                Console.WriteLine(m_cdbmgr.GetException(ref ex));
+                bret = false;
+            }
+            return bret;
+            
          }
         public bool RemoveContact(Contact contact)
         {
-            var ctx = HttpContext.Current;
-
-            if (ctx != null)
+            bool bret = false;
+            try
             {
-                try
-                {
-                    if (ctx.Cache[CacheKey] != null)
-                    {
-                        var currentData = ((Contact[])ctx.Cache[CacheKey]).ToList();                       
-                        Contact[] contactarray = (Contact[])ctx.Cache[CacheKey];
-                        for (int i = 0; i < currentData.Count; ++i)
-                        {
-                            if (contactarray[i].Id == contact.Id)
-                            {
-                                currentData.Remove(contactarray[i]);
-                                break;
-                            }
+                var ctx = HttpContext.Current;
+                SetCache();
+                m_cdatamgr.Remove(ref ctx, ref m_cdbmgr, ref contact);
 
-                        }
-                        ctx.Cache[CacheKey] = currentData.ToArray();
-                        return true;
-                    }
-                    
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    return false;
-                }
             }
-
-            return false;
+            catch (Exception ex)
+            {
+                Console.WriteLine(m_cdbmgr.GetException(ref ex));
+                bret = false;
+            }
+            return bret;
 
         }
     }
