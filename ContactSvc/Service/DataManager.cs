@@ -447,7 +447,15 @@ namespace ContactSvc.Service
                 if (m_cachekey != "" && cctx != null && cctx.Cache[m_cachekey] != null)
                 {
                     var currentData = ((Contact[])cctx.Cache[m_cachekey]).ToList();
-                    currentData.Remove(contact);
+                    Contact[] contactarray = (Contact[])cctx.Cache[m_cachekey];
+                    for (int i = 0; i < currentData.Count;++i)
+                    {
+                        if(contactarray[i].Id==contact.Id)
+                        {
+                            currentData.Remove(contactarray[i]);
+                            break;
+                        }
+                    }                   
                     cctx.Cache[m_cachekey] = currentData.ToArray();
                 }
                 dbmgr.Remove(ref contact);
@@ -509,7 +517,7 @@ namespace ContactSvc.Service
         void SetCacheLastWriteTime(ref HttpContext ctxcache, ref IDBManager dbmgr)
         {
             //Unix style time value from Midnight 1 Jan 1970
-            double ndlastwritetime = DateTime.Now.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+            double ndlastwritetime = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             if (ctxcache != null) 
             {               
                 ctxcache.Cache[m_cachewritetimekey] = ndlastwritetime;                
@@ -541,7 +549,7 @@ namespace ContactSvc.Service
                     }
                 }
                 
-                if (ndbdlastwritetime > ndlastwritetime)
+                if (ndbdlastwritetime != ndlastwritetime)
                 {
                     //cache has expired
                     bret = true;
