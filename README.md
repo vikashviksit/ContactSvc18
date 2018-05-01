@@ -1,4 +1,4 @@
-# ContactSvc17
+# ContactSvc18
 
 This is a source code of a production ready application designed and implemented for maintaining contact information. 
  
@@ -6,10 +6,14 @@ Functionality:  - add a contact - list contacts - edit contact - delete contact
  
 Contact model: - First Name - Last Name - Email - Phone Number - Status (Possible values: Active/Inactive) 
 
-Project has been developed as an Web API MVC4 application with client as a SPA in Visual studio 2017. 
+Project has been developed as an Web API with MVC architecture with web client as a single page application (SPA).
+The storage of records are done in the azure hosted SQL server database. 
+The DataManger module component in the application provides server side caching mechanism to avoid round trips with database server.
+The project has been developed using VS 2017 devlopment envirnonment on Windows.
 
-The project needs to build in V.S 2017 and can be run from the same for demonstarting the functionality.
+Service is hosted on azure cloud at:
+http://contactsvc18.azurewebsites.net/
 
-The storage of records are done in the server memory cache avoid depedency on external storage for demostrating the Service and SPA.
 
-The demonstration of database access layer would require project to be hosted and hence DAL module is not integrated.
+Server side with full cache support for database is hosted at:
+http://contactsvc20180427063825.azurewebsites.net/
