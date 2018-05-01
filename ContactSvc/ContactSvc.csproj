@@ -245,6 +245,7 @@
     <None Include="Properties\PublishProfiles\09916191-0ee0-4-231-b9ee - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\09916191-0ee0-4-231-b9ee - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\ContactSvc18 - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\ContactSvc20180427063825 - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\localiis.pubxml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Images\delete.png" />

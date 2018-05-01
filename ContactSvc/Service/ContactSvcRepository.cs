@@ -8,6 +8,7 @@ namespace ContactSvc.Service
     public class ContactSvcRepository
     {
         private const string CacheKey = "ContactStore";
+        private const string LastWriteKey = "ContactStoreLastWrite";
         private const string DataMgrKey = "DataManager";
         private const string DbMgrKey = "DBManager";
         private IDataManager m_cdatamgr;
@@ -27,7 +28,7 @@ namespace ContactSvc.Service
             {
                 if (ctx.Cache[DataMgrKey] == null)
                 {
-                    ctx.Cache[DataMgrKey] = new ContactDataManager(CacheKey);
+                    ctx.Cache[DataMgrKey] = new ContactDataManager(CacheKey,LastWriteKey);
                 }
                 if (ctx.Cache[DbMgrKey] == null)
                 {
@@ -40,7 +41,7 @@ namespace ContactSvc.Service
             }
             else
             {
-                m_cdatamgr = new ContactDataManager(CacheKey);
+                m_cdatamgr = new ContactDataManager(CacheKey, LastWriteKey);
                 m_cdbmgr = new ContactDBManager(connstring); ;                
 
             }

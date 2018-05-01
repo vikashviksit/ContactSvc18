@@ -17,16 +17,20 @@ namespace ContactSvc.Service
         void Remove(ref Contact c);
         Contact[] Get();
         string GetException(ref Exception parent_ex);
+        void SetTableLastWriteTime(ref double ntime);
+        double GetLastWriteTime();
     }
     class ContactDBManager : IDBManager
     {
         private string m_connstring;
         private string m_error_message;
+        private bool m_bcreatelastwritetime;
 
         public ContactDBManager(string connString)
         {
             //m_connstring = connString;
             m_connstring = connString;
+            m_bcreatelastwritetime = true;
         }
         //Client calling this class method will handle exception
         public void Add(ref Contact c)
@@ -45,7 +49,7 @@ namespace ContactSvc.Service
                 command.Connection = sqlconn;
                 command.Connection.Open();
                 command.CommandText = sqlins;
-                
+
                 SqlParameter idparam = new SqlParameter("@id", c.Id);
                 SqlParameter fnparam = new SqlParameter("@fname", c.FName);
                 SqlParameter lnparam = new SqlParameter("@lname", c.LName);
@@ -150,7 +154,7 @@ namespace ContactSvc.Service
                     c.Email = reader.GetValue(4).ToString();
                     c.Status = (estatus)Convert.ToInt32(reader.GetValue(5));
                     listContact.Add(c);
-                }
+                }              
                 sqlconn.Close();
                 return listContact.ToArray();
             }
@@ -162,7 +166,7 @@ namespace ContactSvc.Service
         }
         public string GetException(ref Exception ex)
         {
-            if(ex != null)
+            if (ex != null)
             {
                 m_error_message += "Parent Exception message:{" + ex.Message + "}";
             }
@@ -181,14 +185,14 @@ namespace ContactSvc.Service
                 SqlCommand command = new SqlCommand();
                 command.Connection = sqlconn;
                 command.Connection.Open();
-                command.CommandText = sqlselect;               
+                command.CommandText = sqlselect;
                 reader = command.ExecuteReader();
                 while (reader.Read())
-                {                   
-                    nId = Convert.ToInt32(reader.GetValue(0));                    
+                {
+                    nId = Convert.ToInt32(reader.GetValue(0));
                 }
                 sqlconn.Close();
-                
+
             }
             catch (Exception ex)
             {
@@ -197,8 +201,119 @@ namespace ContactSvc.Service
             }
             return nId == 0 ? nId = 1 : nId;
         }
-    }
+        public void SetTableLastWriteTime(ref double nlastwritetime)
+        {
+            if (m_bcreatelastwritetime && GetLastWriteTime() <= 0)
+            {
+                AddLastWriteTime(ref nlastwritetime);
+                
+            }
+            else
+            {
+                UpdateLastWriteTime(ref nlastwritetime);
+            }
+            m_bcreatelastwritetime = false;
+        }
+        public double GetLastWriteTime()
+        {
+            double nlastwritetime = -1;
+            try
+            {
 
+                SqlConnection sqlconn = new SqlConnection(m_connstring);//TBD can have a SQL connection pool with thread safe lock 
+                                                                        //to get from pool and mark it as being used and return it instead of closing it
+                SqlDataReader reader = null;
+                string sqlselect = "Select last_write_time from LastWriteTable where table_name='ContactTable'";
+                SqlCommand command = new SqlCommand();
+                command.Connection = sqlconn;
+                command.Connection.Open();
+                command.CommandText = sqlselect;               
+                reader = command.ExecuteReader();
+                if (reader != null)
+                {
+                    while (reader.Read())
+                    {
+
+                        nlastwritetime = Convert.ToDouble(reader.GetValue(0));
+
+                    }
+                }
+                command.Connection.Close();
+                return nlastwritetime;
+            }
+            catch (Exception ex)
+            {
+                m_error_message = ex.Message.ToString();
+                throw;
+            }
+            //return nlastwritetime;
+        }
+        public void AddLastWriteTime(ref double nlastwritetime)
+        {
+            try
+            {
+               
+                SqlConnection sqlconn = new SqlConnection(m_connstring);//TBD can have a SQL connection pool with thread safe lock 
+                                                                        //to get from pool and mark it as being used and return it instead of closing it
+
+                string sqlins = "INSERT INTO  LastWriteTable(table_name,last_write_time) VALUES (@table, @lastwritetime)";
+                SqlCommand command = new SqlCommand();
+                command.Connection = sqlconn;
+                command.Connection.Open();
+                command.CommandText = sqlins;
+
+                SqlParameter tableparam = new SqlParameter("@table", "ContactTable");
+                SqlParameter lwtparam = new SqlParameter("@lastwritetime", nlastwritetime);
+                
+
+                command.Parameters.AddRange(new SqlParameter[] { tableparam, lwtparam});
+                command.ExecuteNonQuery();
+                command.Connection.Close();
+
+            }
+            catch (Exception ex)
+            {
+                m_error_message = ex.Message.ToString();
+                throw;
+            }
+
+        }
+
+        public void UpdateLastWriteTime(ref double nlastwritetime)
+        {
+            try
+            {
+
+                SqlConnection sqlconn = new SqlConnection(m_connstring);//TBD can have a SQL connection pool with thread safe lock 
+                                                                        //to get from pool and mark it as being used and return it instead of closing it
+
+                string sqlupdt = "Update LastWriteTable Set last_write_time=@lastwritetime where table_name=@table";
+                SqlCommand command = new SqlCommand();
+                command.Connection = sqlconn;
+                command.Connection.Open();
+                command.CommandText = sqlupdt;
+
+                SqlParameter tableparam = new SqlParameter("@table", "ContactTable");
+                SqlParameter lwtparam = new SqlParameter("@lastwritetime", nlastwritetime);
+
+
+                command.Parameters.AddRange(new SqlParameter[] { tableparam, lwtparam });
+                command.ExecuteNonQuery();
+                command.Connection.Close();
+
+            }
+            catch (Exception ex)
+            {
+                m_error_message = ex.Message.ToString();
+                throw;
+            }
+
+        }
+        
+
+
+    }
+    
     /*interface ICacheManager
     {
         
@@ -221,7 +336,7 @@ namespace ContactSvc.Service
         void Add(ref HttpContext ctxcache, ref IDBManager dbmgr, ref Contact contact);
         void Update(ref HttpContext ctxcache, ref IDBManager dbmgr, ref Contact contact);
         void Remove(ref HttpContext ctxcache, ref IDBManager dbmgr, ref Contact contact);
-        Contact[] Get(ref HttpContext ctxcache, ref IDBManager dbmgr);
+        Contact[] Get(ref HttpContext ctxcache, ref IDBManager dbmgr);        
     }
 
 
@@ -231,11 +346,13 @@ namespace ContactSvc.Service
 
         private ReaderWriterLockSlim m_Rwlock;
         private string m_cachekey;
-        
+        private string m_cachewritetimekey;
 
-        public ContactDataManager(string cachekey)
+
+        public ContactDataManager(string cachekey,string lastwritetime)
         {
             m_cachekey = cachekey;
+            m_cachewritetimekey = lastwritetime;
             m_Rwlock = new ReaderWriterLockSlim();
 
         }
@@ -261,6 +378,7 @@ namespace ContactSvc.Service
                     cctx.Cache[m_cachekey] = currentData.ToArray();
                 }                
                 dbmgr.Add(ref contact);
+                SetCacheLastWriteTime(ref cctx, ref dbmgr);
 
             }                       
             finally
@@ -313,6 +431,7 @@ namespace ContactSvc.Service
                     cctx.Cache[m_cachekey] = currentData.ToArray();
                 }
                 dbmgr.Update(ref contact);
+                SetCacheLastWriteTime(ref cctx, ref dbmgr);
             }
             finally
             {
@@ -332,6 +451,7 @@ namespace ContactSvc.Service
                     cctx.Cache[m_cachekey] = currentData.ToArray();
                 }
                 dbmgr.Remove(ref contact);
+                SetCacheLastWriteTime(ref cctx, ref dbmgr);
             }
             finally
             {
@@ -346,24 +466,28 @@ namespace ContactSvc.Service
             {
                 m_Rwlock.EnterReadLock();
                 Contact[] contacts = null;
-                /*                
+                
+                
                 if (m_cachekey != "" && cctx != null && cctx.Cache[m_cachekey] != null)
                 {
                     contacts = (Contact[])cctx.Cache[m_cachekey];
-                    if(contacts != null)
+                    if (contacts != null)
                     {
-                        return contacts;
+                        if (HasCacheExpired(ref cctx, ref dbmgr) == false)
+                        {
+                            return contacts;
+                        }
                     }
                 }
-                */
+                
+
                 //Update cache if its empty;
                 contacts = dbmgr.Get();
                 //Write to cache
                 if (cctx != null)
                 {
                     cctx.Cache[m_cachekey] = contacts;
-                }
-                
+                }                
                 return contacts;
 
             }
@@ -381,6 +505,60 @@ namespace ContactSvc.Service
 
             //return null;
 
+        }
+        void SetCacheLastWriteTime(ref HttpContext ctxcache, ref IDBManager dbmgr)
+        {
+            //Unix style time value from Midnight 1 Jan 1970
+            double ndlastwritetime = DateTime.Now.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+            if (ctxcache != null) 
+            {               
+                ctxcache.Cache[m_cachewritetimekey] = ndlastwritetime;                
+            }
+            dbmgr.SetTableLastWriteTime(ref ndlastwritetime);
+        }
+
+        bool HasCacheExpired(ref HttpContext ctxcache, ref IDBManager dbmgr)
+        {
+            bool bret = false;
+            // if any issue continue to use cache
+            try
+            {
+
+                double ndbdlastwritetime = dbmgr.GetLastWriteTime();
+                double ndlastwritetime = 0;
+                //let cache be alive till the time a write is done
+                if (ctxcache != null)
+                { 
+                    if (ctxcache.Cache[m_cachewritetimekey] != null)
+                    {
+                        ndlastwritetime = (double)ctxcache.Cache[m_cachewritetimekey];
+                    }
+                    else
+                    {
+                        //Cache does not exist so create and set it to db last write time
+                        ctxcache.Cache[m_cachewritetimekey] = ndbdlastwritetime;
+
+                    }
+                }
+                
+                if (ndbdlastwritetime > ndlastwritetime)
+                {
+                    //cache has expired
+                    bret = true;
+                    if (ctxcache != null)
+                    {
+                        ctxcache.Cache[m_cachewritetimekey] = ndbdlastwritetime;
+                    }
+                    //Update cache with latest value
+                    
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(dbmgr.GetException(ref ex));
+            }
+            return bret;
         }
     }
 
